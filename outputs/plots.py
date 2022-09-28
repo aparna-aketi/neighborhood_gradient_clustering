@@ -1,19 +1,21 @@
-# %% 
 import os
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
 import matplotlib
 import seaborn as sns
-
+import argparse
 ### set the arguments
-case = "algo"#[iid, noniid, algo, alpha_var]
-plot_data = "val_acc"#[omega, epsilon, train_loss, val_loss, train_acc, val_acc, acc]
-node = 10#[5, 10]
+parser = argparse.ArgumentParser(description='Plots simulations')
+parser.add_argument('--case', default='test', type=str, help = 'takes one of the following values [iid, noniid, algo, alpha_var, test]' )
+parser.add_argument('--plot_data', default='val_loss', type=str, help = 'takes one of the following values [omega, epsilon, train_loss, val_loss, train_acc, val_acc, acc]' )
+parser.add_argument('--node', default=5, type=int, help = 'takes one of the following values [5, 10]' )
+args = parser.parse_args()
+
 
 ### load hyperparameters as per arguments
-if node==5:
-    if case == "iid":
+if args.node==5:
+    if args.case == "iid":
         optimizers = ["ngc", "ngc"]
         networks = ["cganet", "cganet"] 
         nodes = [5, 5]
@@ -22,7 +24,7 @@ if node==5:
         alphas = [1.0, 1.0]
         skew = [0.0, 0.0]
         topologies = ["ring", "full"]
-    elif case =="noniid":
+    elif args.case =="noniid":
         optimizers = ["ngc", "ngc"]
         networks = ["cganet", "cganet"] 
         nodes = [5, 5]
@@ -31,7 +33,7 @@ if node==5:
         alphas = [1.0, 1.0]
         skew = [1.0, 1.0]
         topologies = ["ring", "full"]
-    elif case == "algo":
+    elif args.case == "algo":
         optimizers = ["ngc",  "cga",  "d-psgd"] 
         networks = ["cganet", "cganet", "cganet"] 
         nodes = [5, 5, 5]
@@ -40,9 +42,19 @@ if node==5:
         alphas = [1.0, 1.0, 1.0]
         skew = [1.0, 1.0, 1.0]
         topologies = ["ring", "ring", "ring"]
+        
+    elif args.case == "test":
+        optimizers = ["d-psgd","cga", "ngc", "compcga", "compngc"]
+        networks = ["cganet","cganet","cganet","cganet","cganet"] 
+        nodes = [5, 5, 5, 5, 5]
+        lrs = [0.1, 0.01, 0.01, 0.01, 0.01]
+        gammas = [1.0, 0.1, 0.1, 0.1, 0.1]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0]
+        skew = [1.0, 1.0, 1.0, 1.0, 1.0]
+        topologies = ["ring", "ring", "ring", "ring", "ring"]
 
-elif  node==10:
-    if case == "iid":
+elif  args.node==10:
+    if args.case == "iid":
         optimizers = ["ngc", "ngc", "ngc"]
         networks = ["cganet", "cganet", "cganet"] 
         nodes = [10, 10, 10]
@@ -51,7 +63,7 @@ elif  node==10:
         alphas = [1.0, 1.0, 1.0]
         skew = [0.0, 0.0, 0.0]
         topologies = ["ring", "torus", "full"]
-    elif case =="noniid":
+    elif args.case =="noniid":
         optimizers = ["ngc", "ngc", "ngc"]
         networks = ["cganet", "cganet", "cganet"] 
         nodes = [10, 10, 10]
@@ -60,7 +72,7 @@ elif  node==10:
         alphas = [1.0, 1.0, 1.0]
         skew = [1.0, 1.0, 1.0]
         topologies = ["ring", "torus", "full"]
-    elif case == "algo":
+    elif args.case == "algo":
         optimizers = ["ngc", "cga", "d-psgd"]
         networks = ["cganet","cganet", "cganet"]  
         nodes = [10, 10, 10]
@@ -69,7 +81,7 @@ elif  node==10:
         alphas = [1.0, 1.0, 1.0]
         skew = [1.0, 1.0, 1.0]
         topologies = ["ring", "ring", "ring"]
-    elif case == "alpha_var":
+    elif args.case == "alpha_var":
         optimizers = ["ngc", "ngc", "ngc", "ngc", "ngc"]
         networks = ["cganet", "cganet", "cganet", "cganet", "cganet"] 
         nodes = [10, 10, 10, 10, 10]
@@ -79,7 +91,7 @@ elif  node==10:
         skew = [1.0, 1.0, 1.0, 1.0, 1.0]
         topologies = ["ring", "ring", "ring", "ring", "ring"]
         
-    elif case == "test":
+    elif args.case == "test":
         optimizers = ["d-psgd","cga", "ngc", "compcga", "compngc"]
         networks = ["cganet","cganet","cganet","cganet","cganet"] 
         nodes = [10, 10, 10, 10, 10]
@@ -124,11 +136,11 @@ for opt, net, n, lr, gm, a,sk, tp in zip(optimizers, networks, nodes, lrs, gamma
         val_acc.append(np.mean(np.array(excel_data["val_acc_list"]), axis=0))
         val_loss.append(np.mean(np.array(excel_data["val_loss_list"]), axis=0))
         acc.append(np.mean(np.array(excel_data["avg test acc final"])))
-        if case=="iid" or case == "noniid":
+        if args.case=="iid" or args.case == "noniid":
             labels.append(tp)
-        elif case == "algo" or case == "test":
+        elif args.case == "algo" or args.case == "test":
             labels.append(opt)
-        elif case == "alpha_var" :
+        elif args.case == "alpha_var" :
             labels.append(a)
             
     except:
@@ -140,41 +152,38 @@ plt.style.use("seaborn-talk")
 cs = sns.color_palette("muted")
 
 
-if plot_data == "acc":
+if args.plot_data == "acc":
     ax.plot(labels, acc, color=cs[0],  marker='o', markersize=20, linestyle='--', linewidth=6)
     ax.set_ylabel("Validation Accuracy (%)", fontsize=40)
     plt.xticks(np.arange(-0., 1.1, 0.25),fontsize=30)
     plt.yticks(fontsize=30)
     ax.set_xlabel("Alpha", fontsize=40)
     plt.tight_layout()
-    plt.savefig(case+"_"+plot_data+"_"+str(node)+".jpg")
-    plt.show()
+    plt.savefig(args.case+"_"+args.plot_data+"_"+str(args.node)+".jpg")
 else:
     for i, label in enumerate(labels):
-        if plot_data == "train_loss":
+        if args.plot_data == "train_loss":
             ax.plot(range(1, val_loss[i].shape[0]+1), train_loss[i], color=cs[i],  linewidth=6,label = label)
             ax.set_ylabel("Train Loss", fontsize=40)
-        elif plot_data == "val_loss":
+        elif args.plot_data == "val_loss":
             ax.plot(range(1, val_loss[i].shape[0]+1), val_loss[i], color=cs[i],  linewidth=6,label = label)
             ax.set_ylabel("Validation Loss", fontsize=40)
-        elif plot_data == "train_acc":
+        elif args.plot_data == "train_acc":
             ax.plot(range(1, val_loss[i].shape[0]+1), train_acc[i], color=cs[i],  linewidth=6,label = label)
             ax.set_ylabel("Train Accuracy", fontsize=40)
-        elif plot_data == "val_acc":
+        elif args.plot_data == "val_acc":
             ax.plot(range(1, val_loss[i].shape[0]+1), val_acc[i], color=cs[i],  linewidth=6,label = label)
             ax.set_ylabel("Validation Accuracy", fontsize=40)
-        elif plot_data == "omega":
+        elif args.plot_data == "omega":
             ax.plot(range(1, omega[i].shape[0]+1), omega[i], color=cs[i],  linewidth=6,label = label)
             ax.set_ylabel("Data-Variance Bias", fontsize=40)
-        elif plot_data == "epsilon":
+        elif args.plot_data == "epsilon":
             ax.plot(range(1, epsilon[i].shape[0]+1), epsilon[i], color=cs[i],  linewidth=6,label = label)
             ax.set_ylabel("Model-Variance Bias", fontsize=40)
 
     ax.legend(fontsize=30)
-    plt.xticks(np.arange(0, 301, 60),fontsize=30)
+    plt.xticks(fontsize=30)
     plt.yticks(fontsize=30)
     ax.set_xlabel("Epochs", fontsize=40)
     plt.tight_layout()
-    plt.savefig(case+"_"+plot_data+"_"+str(node)+".jpg")
-    plt.show()
-# %%
+    plt.savefig(args.case+"_"+args.plot_data+"_"+str(args.node)+".jpg")
