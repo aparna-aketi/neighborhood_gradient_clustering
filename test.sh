@@ -23,8 +23,6 @@ cd ./outputs
 python dict_to_csv.py --norm evonorm --lr 0.1 --gamma 1 --arch cganet --world_size 5 --optimizer d-psgd --alpha 1.0 --skew 1 --graph ring
 cd ..
 
-cd ./outputs
-python plots.py --case test --plot_data val_loss --node 5
-cd ..
+
 
 

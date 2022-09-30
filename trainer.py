@@ -286,7 +286,6 @@ def run(rank, size):
         sender=None
     
     if rank==0:
-        torch.save(model.state_dict(), 'init_model.pth')
         print(args)
         print('Printing model summary...')
         if 'cifar' in args.dataset: print(summary(model, (3, 32, 32), batch_size=int(args.batch_size/size), device='cpu'))
@@ -357,8 +356,6 @@ def run(rank, size):
             inp_batch = torch.cat((inp_batch, copy.deepcopy(input_var)), dim=0)
     epsilon_list = []
     omega_list = []
-    train_loss_list = []
-    train_acc_list = []
     val_loss_list = []
     val_acc_list = []
     for epoch in range(0, args.epochs):  
@@ -368,8 +365,6 @@ def run(rank, size):
         data_transferred += dt
         epsilon_list.append(epsilon)
         omega_list.append(omega)
-        train_loss_list.append(loss)
-        train_acc_list.append(acc)
         if epoch>=0: lr_scheduler.step()
         prec1, loss = validate(val_loader, model, criterion, bsz_val,device, epoch)
         is_best = prec1 > best_prec1
@@ -388,7 +383,7 @@ def run(rank, size):
     prec1_final, _ = validate(val_loader, model, criterion, bsz_val,device, epoch, True, args.classes, return_classwise=False)
     print("Rank : ", rank, "Data transferred(in GB) during training: ", data_transferred/1.0e9, "Data transferred(in GB) in final gossip averaging rounds: ", dt/1.0e9, "\n")
     #Store processed data
-    torch.save((prec1, prec1_final, (data_transferred+dt)/1.0e9, epsilon_list, omega_list, train_acc_list, train_loss_list, val_acc_list, val_loss_list), os.path.join(args.save_dir, "excel_data","rank_{}.sp".format(rank)))
+    torch.save((prec1, prec1_final, (data_transferred+dt)/1.0e9, epsilon_list, omega_list, val_acc_list, val_loss_list), os.path.join(args.save_dir, "excel_data","rank_{}.sp".format(rank)))
 
 
 #def train(train_loader, model, criterion, optimizer, epoch, batch_size, writer, device):
@@ -623,22 +618,18 @@ if __name__ == '__main__':
         "data transferred": [0.0 for _ in range(size)],
         "epsilon": [],
         "omega":[],
-        "train_acc_list":[],
-        "train_loss_list":[],
         "val_acc_list":[],
         "val_loss_list":[],
         "seed" :args.seed,
         'depth':args.depth
          }
     for i in range(size):
-        acc, acc_final, d_tfr, epsilon_list, omega_list, train_acc_list, train_loss_list, val_acc_list, val_loss_list = torch.load(os.path.join( args.save_dir, "excel_data","rank_{}.sp".format(i) ))
+        acc, acc_final, d_tfr, epsilon_list, omega_list, val_acc_list, val_loss_list = torch.load(os.path.join( args.save_dir, "excel_data","rank_{}.sp".format(i) ))
         excel_data["avg test acc"][i] = acc
         excel_data["avg test acc final"][i] = acc_final
         excel_data["data transferred"][i] = d_tfr
         excel_data["epsilon"].append(epsilon_list)
         excel_data["omega"].append(omega_list)
-        excel_data["train_acc_list"].append(train_acc_list)
-        excel_data["train_loss_list"].append(train_loss_list)
         excel_data["val_acc_list"].append(val_acc_list)
         excel_data["val_loss_list"].append(val_loss_list)
         
