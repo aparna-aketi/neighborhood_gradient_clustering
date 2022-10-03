@@ -42,7 +42,7 @@ parser = argparse.ArgumentParser(description='Propert ResNets for CIFAR10 in pyt
 parser.add_argument('--arch', '-a', metavar='ARCH', default='cganet', help = 'resnet or vgg or resquant' )
 parser.add_argument('-depth', '--depth', default=20, type=int, help='depth of the resnet model')
 parser.add_argument('--normtype',   default='evonorm', help = 'none or batchnorm or groupnorm or evonorm' )
-parser.add_argument('--data-dir', dest='data_dir',    help='The directory used to save the trained models',   default='../data', type=str)
+parser.add_argument('--data-dir', dest='data_dir',    help='The directory used to save the trained models',   default='../../data', type=str)
 parser.add_argument('--dataset', dest='dataset',     help='available datasets: cifar10, cifar100, imagenette', default='cifar10', type=str)
 parser.add_argument('--skew', default=1.0, type=float,     help='obelongs to [0,1] where 0= completely iid and 1=completely non-iid')
 parser.add_argument('--classes', default=10, type=int,     help='number of classes in the dataset')
@@ -348,12 +348,6 @@ def run(rank, size):
     else:
         lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, gamma = 0.1, milestones=[int(args.epochs*0.5), int(args.epochs*0.75)])
     
-    for i, (input, target) in enumerate(train_loader):
-        input_var, _ = Variable(input).to(device), Variable(target).to(device)
-        if i ==0:
-            inp_batch   = copy.deepcopy(input_var)
-        elif inp_batch.size(0)<128:
-            inp_batch = torch.cat((inp_batch, copy.deepcopy(input_var)), dim=0)
     epsilon_list = []
     omega_list = []
     val_loss_list = []
@@ -361,7 +355,7 @@ def run(rank, size):
     for epoch in range(0, args.epochs):  
         print('current lr {:.5e}'.format(optimizer.param_groups[0]['lr']))
         model.block()
-        dt, global_steps, epsilon, omega, acc, loss = train(train_loader, model, criterion, optimizer, epoch, bsz_train, optimizer.param_groups[0]['lr'], device, rank, inp_batch, global_steps, receiver, sender)
+        dt, epsilon, omega, acc, loss = train(train_loader, model, criterion, optimizer, epoch, bsz_train, optimizer.param_groups[0]['lr'], device, receiver, sender)
         data_transferred += dt
         epsilon_list.append(epsilon)
         omega_list.append(omega)
@@ -378,7 +372,7 @@ def run(rank, size):
         }, is_best, filename=os.path.join(args.save_dir, 'model_{}_{}.th'.format(rank, args.run_no)))
       
     #############################
-    dt = gossip_avg(train_loader, model, criterion, optimizer, epoch, bsz_train, optimizer.param_groups[0]['lr'], device, rank)
+    dt = gossip_avg(train_loader, model, criterion, optimizer, epoch, optimizer.param_groups[0]['lr'], device)
     print('Final test accuracy')
     prec1_final, _ = validate(val_loader, model, criterion, bsz_val,device, epoch, True, args.classes, return_classwise=False)
     print("Rank : ", rank, "Data transferred(in GB) during training: ", data_transferred/1.0e9, "Data transferred(in GB) in final gossip averaging rounds: ", dt/1.0e9, "\n")
@@ -387,7 +381,7 @@ def run(rank, size):
 
 
 #def train(train_loader, model, criterion, optimizer, epoch, batch_size, writer, device):
-def train(train_loader, model, criterion, optimizer, epoch, batch_size, lr, device, rank, inp_batch=None, global_steps=0, receiver=None, sender=None):
+def train(train_loader, model, criterion, optimizer, epoch, batch_size, lr, device, receiver=None, sender=None):
     """
         Run one train epoch
     """
@@ -436,7 +430,6 @@ def train(train_loader, model, criterion, optimizer, epoch, batch_size, lr, devi
 
         # do local update
         optimizer.step()
-        global_steps+=1
         #zero out the gradients
         optimizer.zero_grad() 
         output = output.float()
@@ -458,9 +451,9 @@ def train(train_loader, model, criterion, optimizer, epoch, batch_size, lr, devi
                       dist.get_rank(), epoch, i, len(train_loader),  batch_time=batch_time,
                       loss=losses, top1=top1))
         step += batch_size 
-    return data_transferred, global_steps, epsilon/float(len(train_loader)+1), omega/float(len(train_loader)+1), top1.avg, losses.avg
+    return data_transferred, epsilon/float(len(train_loader)+1), omega/float(len(train_loader)+1), top1.avg, losses.avg
 
-def gossip_avg(train_loader, model, criterion, optimizer, epoch, batch_size, lr, device, rank):
+def gossip_avg(train_loader, model, criterion, optimizer, epoch, lr, device):
     """
        This function runs only gossip averaging for 50 iterations without local sgd updates - used to obtain the average model
     """
