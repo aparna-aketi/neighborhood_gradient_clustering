@@ -150,6 +150,15 @@ save_temp/
 outputs/
 message.txt 
 trainer_debug.py
+trainer_imagenet.py
+trainer_add.py
+labelsfmnist.npy
+labelscifar10.npy
+labelscifar100.npy
+labelsimagenette.npy
+labelsimagenette_full.npy
+labelsimagenet.npy
+test_imagenette.sh
 # data
 /data
 serialization_dir

@@ -221,3 +221,27 @@ class FullGraph(GraphManager):
     def is_passive(self, rank=None): return False
 
     def is_dynamic_graph(self, graph_type=None): return False
+
+
+class ChainGraph(GraphManager):
+
+    def _make_graph(self):
+        for rank in range(self.world_size):
+            if rank ==0:
+                f_peer = self._rotate_forward(rank, 1)
+                self._add_peers(rank, [f_peer, f_peer])
+            elif rank == self.world_size -1:
+                b_peer = self._rotate_backward(rank, 1)
+                self._add_peers(rank, [b_peer, b_peer])
+            else:
+                f_peer = self._rotate_forward(rank, 1)
+                b_peer = self._rotate_backward(rank, 1)
+                self._add_peers(rank, [f_peer, b_peer])
+
+    def is_regular_graph(self): return True
+
+    def is_bipartite_graph(self): return False
+
+    def is_passive(self, rank=None): return False
+
+    def is_dynamic_graph(self, graph_type=None): return False

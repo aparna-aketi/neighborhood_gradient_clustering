@@ -13,20 +13,23 @@ Decentralized learning algorithms enable training of deep learning models over l
 * found in env.yml file
 
 # Hyper-parameters
-* --world_size  = total number of agents
-* --graph       = graph topology (default ring)
-* --neighbors   = number of neighbor per agent (default 2)
-* --optimizer   = global optimizer i.e., [d-psgd, ngc, cga, compngc, compcga]
-* --arch        = model to train
-* --normtype    = type of normalization layer
-* --dataset     = dataset to train
-* --batch_size  = batch size for training
-* --epochs      = total number of training epochs
-* --lr          = learning rate
-* --momentum    = momentum coefficient
-* --gamma       = averaging rate for gossip 
-* --skew        = amount of skew in the data distribution; lies in the range [0,1] where 0 = completely iid and 1 = completely non-iid
-* --alpha       = NGC mixing weight
+* --world_size   = total number of agents
+* --graph        = graph topology (default ring)
+* --neighbors    = number of neighbor per agent (default 2)
+* --optimizer    = global optimizer i.e., [d-psgd, ngc, cga, compngc, compcga]
+* --arch         = model to train
+* --normtype     = type of normalization layer
+* --dataset      = dataset to train
+* --batch_size   = batch size for training
+* --epochs       = total number of training epochs
+* --lr           = learning rate
+* --momentum     = momentum coefficient
+* --qgm          = activates quasi global momentum for ngc or cga 
+* --nesterov     = activates nesterov momentum
+* --weight_decay = weight decay
+* --gamma        = averaging rate for gossip 
+* --skew         = amount of skew in the data distribution; 0 = completely iid and 1 = completely non-iid
+* --alpha        = NGC mixing weight (either 0 or 1)
 
 # How to run?
 
@@ -42,10 +45,10 @@ sh figure.sh
 
 5 layer CNN with 5 agents undirected ring topology with NGC optimizer:
 ```
-python trainer.py  --data-dir ../data   --lr 0.01  --batch-size 160  --world_size 5 --skew 1 --gamma 0.1 --normtype evonorm --optimizer ngc --epoch 100 --arch cganet --momentum 0.9 --alpha 1.0 --graph ring --neighbors 2 
+python trainer.py  --data-dir ../data   --lr 0.01  --batch-size 160  --world_size 5 --skew 1 --gamma 0.1 --normtype evonorm --optimizer ngc --epoch 100 --arch cganet --momentum 0.9 --alpha 1.0 --graph ring --neighbors 2 --nesterov
 ```
 
 ResNet20 with 10 agents undirected ring topology with NGC optimizer:
 ```
-python trainer.py  --data-dir ../data   --lr 0.01  --batch-size 320  --world_size 10 --skew 1 --gamma 0.1 --normtype evonorm --optimizer ngc --epoch 100 --arch resnet --depth 20 --momentum 0.9 --alpha 1.0 --graph ring --neighbors 2 
+python trainer.py  --data-dir ../data   --lr 0.01  --batch-size 320  --world_size 10 --skew 1 --gamma 0.1 --normtype evonorm --optimizer ngc --epoch 100 --arch resnet --depth 20 --momentum 0.9 --alpha 1.0 --graph ring --neighbors 2 --nesterov
 ```

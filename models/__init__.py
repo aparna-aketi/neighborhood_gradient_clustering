@@ -4,7 +4,5 @@ from .mobilenetv2 import *
 from .vgg import *
 from .tinynet import *
 from .cganet import *
-from .cga import *
-from .compresscga import *
-from .ngc import *
-from .compressngc import *
+from .lenet5 import *
+

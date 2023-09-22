@@ -153,7 +153,6 @@ class ResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
@@ -182,11 +181,34 @@ class ResNet_imagenet(ResNet):
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         init_model(self)
+
+class ResNet_fmnist(ResNet):
+
+    def __init__(self, num_classes=10, block=BasicBlock, depth=20, groups=None, norm_type='evonorm'):
+        super(ResNet_fmnist, self).__init__()
+        self.inplanes = 16
+        self.norm_type = norm_type
+        n = int((depth - 2) / 6)
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1,
+                               bias=False)
+  
+        self.bn1 = normalization(16, groups, norm_type)
+        if 'evo' not in self.norm_type:
+            self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.Identity()
+        self.layer1 = self._make_layer(block, 16, n, norm_type, groups)
+        self.layer2 = self._make_layer(block, 32, n, norm_type, groups, stride=2)
+        self.layer3 = self._make_layer(block, 64, n, norm_type, groups, stride=2)
+        self.layer4 = nn.Identity()
+        self.avgpool = nn.AvgPool2d(7)
+        self.fc = nn.Linear(64, num_classes)
+
+        init_model(self)
     
 
 class ResNet_cifar(ResNet):
 
-    def __init__(self, num_classes=10, block=BasicBlock, depth=18, groups=None, norm_type='evonorm'):
+    def __init__(self, num_classes=10, block=BasicBlock, depth=20, groups=None, norm_type='evonorm'):
         super(ResNet_cifar, self).__init__()
         self.inplanes = 16
         self.norm_type = norm_type
@@ -213,7 +235,7 @@ def resnet(**kwargs):
         kwargs.get, ['num_classes', 'depth', 'dataset', 'norm_type', 'groups'])
     if dataset == 'imagenet':
         num_classes = num_classes or 1000
-        depth = depth or 50
+        depth = depth or 18
         if depth == 18:
             return ResNet_imagenet(num_classes=num_classes,
                                    block=BasicBlock, layers=[2, 2, 2, 2], norm_type=norm_type, groups=groups)
@@ -232,15 +254,38 @@ def resnet(**kwargs):
 
     elif dataset == 'cifar10':
         num_classes = num_classes or 10
-        depth       = depth or 56
+        depth       = depth or 20
         return ResNet_cifar(num_classes=num_classes, block=BasicBlock, depth=depth, norm_type=norm_type, groups=groups)
+    elif dataset == 'fmnist':
+        num_classes = num_classes or 10
+        depth       = depth or 20
+        return ResNet_fmnist(num_classes=num_classes, block=BasicBlock, depth=depth, norm_type=norm_type, groups=groups)
     elif dataset == 'cifar100':
         num_classes = num_classes or 100
-        depth       = depth or 56
+        depth       = depth or 20
         return ResNet_cifar(num_classes=num_classes, block=BasicBlock, depth=depth, norm_type=norm_type, groups=groups)
     
     elif dataset == 'imagenette':
         num_classes = num_classes or 10
-        return ResNet_imagenet(num_classes=num_classes, block=BasicBlock, layers=[2, 2, 2, 2], norm_type=norm_type, groups=groups)
+        return ResNet_cifar(num_classes=num_classes, block=BasicBlock, depth=depth, norm_type=norm_type, groups=groups)
+    
+    elif dataset == 'imagenette_full':
+        num_classes = num_classes or 10
+        depth = depth or 18
+        if depth == 18:
+            return ResNet_imagenet(num_classes=num_classes,
+                                   block=BasicBlock, layers=[2, 2, 2, 2], norm_type=norm_type, groups=groups)
+        if depth == 34:
+            return ResNet_imagenet(num_classes=num_classes,
+                                   block=BasicBlock, layers=[3, 4, 6, 3], norm_type=norm_type, groups=groups)
+        if depth == 50:
+            return ResNet_imagenet(num_classes=num_classes,
+                                   block=Bottleneck, layers=[3, 4, 6, 3],  norm_type=norm_type, groups=groups)
+        if depth == 101:
+            return ResNet_imagenet(num_classes=num_classes,
+                                   block=Bottleneck, layers=[3, 4, 23, 3],  norm_type=norm_type, groups=groups)
+        if depth == 152:
+            return ResNet_imagenet(num_classes=num_classes,
+                                   block=Bottleneck, layers=[3, 8, 36, 3],  norm_type=norm_type, groups=groups)
     
     

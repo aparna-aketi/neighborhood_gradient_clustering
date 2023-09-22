@@ -13,7 +13,7 @@ parser.add_argument('--arch', dest='arch',
 
 parser.add_argument('--optimizer',
                     help='Architecture of model',
-                    default="d-psgd", type=str)
+                    default="ngc", type=str)
 
 parser.add_argument('--norm', dest='norm',
                     help='The directory used to save the trained models',
@@ -21,12 +21,12 @@ parser.add_argument('--norm', dest='norm',
 
 parser.add_argument('--lr', 
                     help='The directory used to save the trained models',
-                    default=0.1, type=float)
+                    default=0.01, type=float)
 
 parser.add_argument('--gamma', dest='gamma',
                     help='The directory used to save the trained models',
-                    default=0.1, type=float)
-parser.add_argument('--alpha',  default=1.0, type=float, help='NGC mixing weight')
+                    default=1.0, type=float)
+parser.add_argument('--alpha',  default=0.0, type=float, help='NGC mixing weight')
 
 parser.add_argument('--output-file', dest='output_file',
                     help='The directory used to save the trained models',

@@ -53,28 +53,19 @@ class MobileNetV2(nn.Module):
     #cfg = (expansion, out_planes, num_blocks, stride) 
  
 
-    def __init__(self, num_classes=10, groups = 2, norm_type='evonorm', dataset='imagenette'):
+    def __init__(self, num_classes=10, groups = 2, norm_type='evonorm'):
         super(MobileNetV2, self).__init__()
         # NOTE: change conv1 stride 2 -> 1 for CIFAR10
-        self.dataset = dataset
-        if 'cifar' in dataset:
-            self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=False)
-            self.cfg = [(1,  16, 1, 1),
+  
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=False)
+        self.cfg = [(1,  16, 1, 1),
                         (6,  24, 2, 1),  # NOTE: change stride 2 -> 1 for CIFAR10
                         (6,  32, 3, 2),
                         (6,  64, 4, 2),
                         (6,  96, 3, 1),
                         (6, 160, 3, 2),
                         (6, 320, 1, 1)]
-        else:
-            self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=2, padding=1, bias=False)
-            self.cfg = [(1,  16, 1, 1),
-                        (6,  24, 2, 2),  
-                        (6,  32, 3, 2),
-                        (6,  64, 4, 2),
-                        (6,  96, 3, 1),
-                        (6, 160, 3, 2),
-                        (6, 320, 1, 1)]
+      
         self.bn1 = normalization(32, groups, norm_type)
         self.layers = self._make_layers(in_planes=32, groups=groups, norm_type=norm_type)
         self.conv2 = nn.Conv2d(320, 1280, kernel_size=1, stride=1, padding=0, bias=False)
@@ -102,10 +93,7 @@ class MobileNetV2(nn.Module):
         if self.norm_type!='evonorm':
             out = self.relu(out)
         # NOTE: change pooling kernel_size 7 -> 4 for CIFAR10
-        if 'cifar' in self.dataset:
-            out = F.avg_pool2d(out, 4)
-        else:
-            out = F.avg_pool2d(out, 7)
+        out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out

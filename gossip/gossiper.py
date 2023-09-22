@@ -81,7 +81,6 @@ class Gossiper(object):
                     if self.logger is not None:
                         self.logger.error(e)
             self.placeholder   = self.in_msg_buffer.clone()
-            self.neigh_weights = []
         else:
             self.out_msg_buffer = []
             self.in_msg_buffer = []
@@ -174,8 +173,6 @@ class Gossiper(object):
     def mix(self):
         """ Single gossip step """
         raise NotImplementedError
-
-
 
 class SGD_DS(Gossiper):
 
